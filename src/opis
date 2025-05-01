@@ -1,0 +1,138 @@
+w panelu super admina chcę dodawać kontrahentow do swojej bazy danych (nazwa, ulica, miasto, nr tel, mail, nip) - wymagane tylko nazwa. oraz wyświetlać listę już dodanych w formie kart z możliwością usuwania oraz edycji. 
+Każdy dodany kontrahent ma swój indywidualny panel do którego może się zalogować i zarządzać pracownikami.
+Karta kontrahenta wyświetla nazwę, NIP.
+Kartę każdego kontrahenta można rozwinąć po rozwinięciu karty widać resztę danych kontrahenta i  pojawia się formularz dodawania pracownika do danego kontrahenta. 
+(Imię i nazwisko, nr tel, mail, login, hasło, wybór roli - admin, pracownik) 
+A pod spodem listę dodanych pracowników z możliwością usuwania oraz edycji. 
+
+Podczas logowania pracownika sprawdzaj do którego kontrahenta jest przypisany. I przenoś pracownika do panelu kontrahenta. 
+
+W panelu kontrahenta chcę mieć zakładkę firmy a w niej 
+Formularz Dodawania firmy do listy bezpośrednio w tej zakładce (nazwa, ulica, miasto, tel,mail, NIP, skrócona nazwa) 
+A pod formularzem listę już dodanych firm w formie kart. 
+Karta firmy zawiera nazwy firmy miejscowość i NIP. 
+Karta firmy może być rozwijana po rozwinięciu pokaż resztę danych oraz formularz dodawania kierowcy do danej firmy (imię i nazwisko, nr tel) oraz wyświetl listę już dodany w kierowców z możliwością edycji lub usunięcia. 
+
+W panelu kontrahenta chcę zakładkę "ustawienia" a w niej pasek zakładek a pierwsza zakładka jest zakładka "piece" a w niej przełącznik który nazywa się "więcej niż jeden piec" jeżeli jest włączony to pokaż formularz dodawania pieca (nazwa, wybór jednego z kilkunastu predefiniowanych kolorów oraz dodatkowy kolor picker) 
+A pod spodem listę dodanych piecy z możliwością edycji oraz usuwania.
+W panelu kontrahenta w zakładce ustawienia w pasku zakładek obok zakładki piece pokaż zakładkę "pracownicy"
+A w niej wyświetl formularz dodawania pracownika do kontrahenta
+(Imię i nazwisko, nr tel, mail, login, hasło, wybór roli - admin, pracownik)  oraz listę już dodanych z możliwością edycji oraz usuwania. To jest ta sama lista pracowników która jest wyświetlana w panelu super admina. 
+Po kliknięciu w kartę pracownika wyświetl historię pracy danego pracownika. 
+Oraz wyświetl logi danego pracownika(datę i godzinę oraz czynność. Loguj każdemu użytkownikowi dodanie lub edycję kremacji, loguj edycję czasu pracy, loguj edycję godziny rozpoczęcia pracy i godziny zakończenia pracy. Loguj edycję wszystkich danych kremacji i innych jak również dane logowania)
+W panelu kontrahenta obok zakładki ustawienia utwórz zakładkę terminarz. W zakładce terminarz na samej górze pokaż formularz dodawania kremacji ( wybór daty i godziny, pole wyszukiwania które przeszukuje firmy dodane przez danego kontrahenta. Nieważne czy wpiszę nazwę firmy czy NIP czy miasto czy ulice będą podpowiadane wyniki) po wybraniu firmy wyróżni ją tak żeby była widoczna która jest wybrana. Obok formularza wyszukiwania pokaż przycisk po kliknięciu którego zostanie wyświetlona lista dodanych firm w oknie popup. A na samej górze listy będzie pole wyszukiwania. Po wybraniu firmy zamknij okno popup i wyróżnij wybraną firmę. Są to dwa różne sposoby na dodawanie firmy do kremacji albo przez pole wyszukiwania albo przez wybór firmy z listy już dodanych firm. Chciałbym żeby każdą kremację można było oznaczyć. Będzie kilka kategorii oznaczenia. 
+1. Wizyta rodziny (obecna, nie obecna, brak danych) 
+2. rodzaj kremacji (zwykła, ekshumacja) 
+3. Waga (do 100kg, +100kg, max) 
+Oznaczenia pokazuj w formie badges. A wybrane oznaczenie wyróżnij. Oznaczenia nie są wymagane. A jeżeli jakieś oznaczenie zostało wybrane to pokazuj je na karcie kremacji.
+Pokaż przycisk dodaj do dodawania kremacji. 
+Każda dodana kremacja powinna mieć swój indywidualny numer oraz link. 
+Poniżej formularza dodawania kremacji powinna być lista kremacji pogrupowana na dni tygodnia. Wyświetlę nazwę dnia tygodnia wyświetl dzień miesiąca oraz nazwę miesiąca. 
+Wyświetl po lewej stronie godzinę kremacji pogrubioną większą czcionką. Na prawo od godziny kremacji pokaż kartę kremacji a w niej nazwę firmy przypisaną do tej kremacji oraz miasto tej firmy. Natomiast na karcie kremacji z prawej strony wyświetl oznaczenia kremacji jeżeli jeżeli jakieś oznaczenie zostało wybrane. Jeżeli podczas dodawania kremacja wizyta rodziny była zaznaczona jako obecna to na karcie kremacji dodaj czerwony akcent, natomiast jeżeli wybrane oznaczenie było nieobecna to dodaj czerwony akcent do karty kremacji, natomiast jeżeli wybrana było oznaczenie brak danych to pozostaw bez zmian. 
+Kartę kremacji można rozwinąć. 
+Po rozwinięciu karty danej kremacji  pokaż :
+1. Link do danej kremacji a obok linku pole textowe do ustalenia hasla.
+Jezeli otworzymy link do kremacji w przegladarce popros o podanie hasla przypisanego do linku i jezeli haslo sie zgadza wyswietl karte tej kremacji ze wszystkimi informacjami i pozwol edytowac dane.
+Oddziel linia od paska zakładek i pod linią pokaz
+Pasek zakładek a w niej zakładkę "podsumowanie" i wyświetl w niejniej 
+dane firmy która jest przypisana do danej kremacji. Datę i godzinę kremacji. Oraz wybrane oznaczenia kremacji jeżeli były wybrane. 
+Wyświetl listę kierowców do danych do danej firmy wraz z numerem telefonu. 
+Obok zakładki podsumowanie Stwórz zakładkę "dane"
+A w niej formularze do wprowadzenia danych zmarłego (imiona z nazwisko, miejsce urodzenia, data urodzenia, miejsce zgonu, data zgonu, urząd stanu cywilnego, numer aktu zgonu) oraz formularz do dodawania osoby zlecającej (imię oraz nazwisko, miejsce za mieszkania, numer telefonu, mail, numer dowodu, seria dowodu) 
+Oraz przycisk zapisz. Dane wyświetlaj oraz wyświetl przełącznik po którego włączeniu możliwa jest edycja tych danych.
+Chciałbym aby każdy pracownik z rolą pracownik miał swój własny panel. Bierz pod uwagę firmę do której jest przypisane pracownik i wyświetlaj mu dane firmy do której jest przypisany. W panelu tym na samej górze byłby navigation bar a w nim odnośnik "terminarz" po kliknięciu którego wyświetlane byłyby te same dane które wyświetlane są w panelu kontrahenta danej firmy, obok zakładki terminarz wyświetlana byłaby zakładka ustawienia a w niej wyświetlane dane z panelu ustawienia danego kontrahenta. Chciałbym aby w navigation bar widniały informacje jak i pracownik jest zalogowany oraz przycisk wyloguj. Po kliknięciu w nazwę pracownika okaże się odnośnik do panelu pracownika z historią pracy. W top navbar pokaż przycisk zielony start.  Oraz czerwony stop. Jeżeli zostanie wciśnięty przycisk zielony w tym momencie zostaje rozpoczęte naliczanie czasu pracy danego pracownika do momentu do którego wciśnie przycisk stop. Aktualny czas pracy wyświetlaj obok przycisków. Po wciśnięciu przycisku stop dodaj do aktualnego dnia liczbę godzin przepracowanych tego dnia godziny zaokrąglaj w ten sposób że jeżeli jest więcej niż 31 minuta zaokrąglaj do całej godziny. 
+W panelu pracownika wyświetl listę dni a przy każdym dniu pokaż czas rozpoczęcia i zakończenia pracy oraz liczbę przepracowanych godzin liczbę przepracowanych godzin. Dodaj przycisk edytuj gdzie można zmienić godzinę rozpoczęcia i zakończone pracy i jeżeli zostały zmienione to podlicz nam na nowo liczbę przepracowanych godzin 
+Na dole pokaż sumę przepracowanych godzin w danym miesiącu.
+Oraz wyświetl wszystkie dane logowania danego pracownika.
+
+Poniższa opcja jest do zaimplementowania na samym końcu tylko wtedy jeżeli będzie bezproblemowa i w pełni funkcjonalna. 
+
+Panelu kontrahenta w zakładce ustawienia w pasku zakładek obok zakładki piecy oraz pracownicy pokaż zakładkę" świadectwo kremacji" a w niej możliwość dodania grafiki oraz listę dodanych grafik z możliwością edycji. 
+Oraz chciałbym móc ustawiać wzór świadectwa kremacji który będzie w formacie a4. Wzór miałby sobie wprowadzone napisy a w odpowiednich miejscach wstawiane były by dane przypisane do kremacji. Chciałbym ustalać dokładnie w którym miejscu ma się pojawiać dany tekst. Najlepszy byłby graficzny edytor. 
+
+W karcie każdej kremacji w zakładce dane pod danymi osoby zmarłej oraz osoby zlecającej powinien być przycisk generuj świadectwo kremacji po kliknięciu którego otworzy się okno popup. Pokaże się lista dodanych grafik które były dodane w panelu kontrahenta w zakładce ustawienia w zakładce świadectwo kremacji. Po wybraniu grafiki dana grafika powinna być ustawiona jako tło pliku pdf wielkości a4. A nad tłem powinny być napisy według wzoru który był ustawiony w panelu kontrahenta w zakładce ustawienia w zakładce świadectwo kremacji. A w wybranych miejscach wprowadź automatycznie dane przypisane do danej kremacji. Chciałbym aby taki plik PDF można było zapisać lub utworzyć
+
+
+Stwórz panel super admina. 
+Na podstawie opisu całej aplikacji Stwórz schemat bazy danych wraz z instrukcjami do SQL editor supabase. Nie chcę używać polityki rls. Utwórz wszystko w odpowiedniej kolejności tak żeby nie popełnić błędów. 
+Stwórz bardzo prosty system logowania oparty tylko o login i hasło. 
+Bierz pod uwagę rolę użytkownika jeżeli użytkownik Ma rolę super admin przednosz go do panelu super admina. 
+Użytkownik super admin nie musi być przypisany do żadnego kontrahenta.
+Jeżeli loguje się użytkownik z rolą admin przenoś go do panelu kontrahenta do którego jest przypisany.
+Jeżeli loguje się użytkownik z rolą pracownik przenoś go do panelu pracownika a w panelu pracownika wyświetlaj dane firmy do której jest przypisany. 
+Podczas tworzenia bazy danych automatycznie utwórz użytkownika super admin z loginem superadmin, hasłem superadminjogi123 i rolą super admin. 
+
+
+Design aplikacji ma być oparty na kartach ma być responsywny minimalistyczny elegancki oraz bardzo profesjonalny, ma być nowoczesny wykonany według najnowszych standardów. 
+Używaj biblioteki shadcn do tworzenia komponentów. bede uzywal serwisu tinte.dev do generowania kodu pliku css ze stylem kolorystycznym dla shadcnui. komponenty tworz na bazie tych zmiennych i klas.
+Przyklad pliku global.css znajduje sie ponizej.
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+  --background: 0 0% 100%;
+  --foreground: 240 3% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --primary: 204.2553191489362 59.49367088607595% 30.98039215686275%;
+  --primary-foreground: 60 9.1% 97.8%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --ring: 204.2553191489362 59.49367088607595% 30.98039215686275%;
+  --chart-1: 204.2553191489362 59.49367088607595% 30.98039215686275%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 11.9205298013245 75.87939698492463% 60.98039215686274%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+  --background: 240 3% 10%;
+  --foreground: 0 0% 100%;
+  --card: 240 3% 10%;
+  --card-foreground: 0 0% 100%;
+  --popover: 240 3% 10%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 240 3% 10%;
+  --secondary: 240 3% 20%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 3% 20%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3% 20%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 3% 20%;
+  --input: 240 3% 20%;
+  --ring: 240 4.9% 83.9%;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 59%;
+  --chart-3: 197 37% 54%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+  }
+}
+
+Dodaj obsługę ciemnego i jasnego motywu.
+Aplikacja powinna być w języku polskim i powinna dobrze wyświetlać się na urządzeniach mobilnych oraz na komputerach.
+
+Pamietaj ze panel super admina jest tylko do dodawania kontrahentow oraz dodawania pracownikow do juz dodanych kontrahentow wedlug wczesniejszego opisu.
+Pamietaj ze kazdy kontrahent ma wlasny indywidualny panel kontrahenta z wlasna baza danych.
+Pamietaj ze kazda dodana kremacja rowniez ma swoj wlasny indywidualny numer oraz link.

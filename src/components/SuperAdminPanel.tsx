@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { getContractors, createContractor, updateContractor, deleteContractor, createEmployee } from '../lib/database';
 import { logActivity } from '../lib/auth';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { ChevronDown, ChevronUp, LogOut, Pencil, Trash2, UserPlus, UserX } from 'lucide-react';
+import { ChevronDown, ChevronUp, LogOut, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 import { useToast } from '../hooks/use-toast';
+import { EmployeesList } from './EmployeesList';
 
 type Contractor = {
   id: number;
@@ -59,7 +59,6 @@ export function SuperAdminPanel() {
   });
   const [selectedContractorId, setSelectedContractorId] = useState<number | null>(null);
   const [editingContractor, setEditingContractor] = useState<Contractor | null>(null);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
     fetchContractors();

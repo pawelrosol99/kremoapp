@@ -1,18 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card';
-import { Calendar, CircleCheck, ChevronDown, ChevronUp, Cog, Flame, CircleHelp, LogOut, Pencil, Plus, Settings, Tag, Trash2, User, UserCheck, UserCog, Users, Weight, CircleX } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Calendar, ChevronDown, ChevronUp, Cog, Flame, LogOut, Pencil, Plus, Settings, Trash2, User, UserCog, Users } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { useToast } from '../hooks/use-toast';
 import { DriversList } from './DriversList';
 import { EmployeesList } from './EmployeesList';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 
 type Company = {
   id: number;
@@ -38,7 +38,6 @@ export function ContractorAdminPanel() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState<any>(null);
   const [contractorData, setContractorData] = useState<any>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [newCompany, setNewCompany] = useState<Partial<Company>>({
@@ -50,7 +49,6 @@ export function ContractorAdminPanel() {
     email: '',
     nip: ''
   });
-  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [activeTab, setActiveTab] = useState('companies');
   const [newDriver, setNewDriver] = useState<Partial<Driver>>({
     first_name: '',
@@ -64,16 +62,26 @@ export function ContractorAdminPanel() {
     color: 'red'
   });
   const [ovens, setOvens] = useState<any[]>([]);
-  const [loadingOvens, setLoadingOvens] = useState(false);
+  const [newEmployee, setNewEmployee] = useState({
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+    login: '',
+    password: '',
+    role: 'worker',
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Company[]>([]);
   const [showCompanyDialog, setShowCompanyDialog] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<any>(null);
-  const [cremationMarking, setCremationMarking] = useState<{
-    familyVisit?: 'present' | 'not_present' | 'no_data';
-    cremationType?: 'normal' | 'exhumation';
-    weight?: 'up_to_100kg' | 'plus_100kg' | 'max';
-  }>({});
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [groupedCremations, setGroupedCremations] = useState([]);
+  const [cremationDate, setCremationDate] = useState('');
+  const [cremationTime, setCremationTime] = useState('');
+  const [selectedBadges, setSelectedBadges] = useState({});
+  const [loadingOvens, setLoadingOvens] = useState(false);
+  const [cremations, setCremations] = useState([]);
+  const [selectedOven, setSelectedOven] = useState<any>(null);
   
   // Predefined oven colors
   const ovenColors = [
@@ -96,7 +104,6 @@ export function ContractorAdminPanel() {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setUserData(user);
         if (user.employee_id) {
           fetchContractorData(user.employee_id);
         }
@@ -224,25 +231,37 @@ export function ContractorAdminPanel() {
     }
   };
   
-  const handleCompanySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCompanySearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setSearchTerm(term);
-    
-    if (term.length >= 3) {
-      const results = companies.filter(company => {
-        const searchTermLower = term.toLowerCase();
-        return (
-          company.name?.toLowerCase().includes(searchTermLower) ||
-          company.short_name?.toLowerCase().includes(searchTermLower) ||
-          company.city?.toLowerCase().includes(searchTermLower) ||
-          company.street?.toLowerCase().includes(searchTermLower) ||
-          company.nip?.toLowerCase().includes(searchTermLower)
-        );
-      });
-      setSearchResults(results);
+  
+    if (term.length >= 2) {
+      try {
+        const { data, error } = await supabase
+          .from('companies')
+          .select('*')
+          .ilike('name', `%${term}%`)
+          .eq('contractor_id', contractorData.id);
+  
+        if (error) throw error;
+        setSearchResults(data || []);
+      } catch (error) {
+        console.error('Błąd podczas wyszukiwania firm:', error);
+        toast({
+          title: 'Błąd',
+          description: 'Nie udało się wyszukać firm',
+          variant: 'destructive',
+        });
+      }
     } else {
       setSearchResults([]);
     }
+  };
+
+  const handleSelectCompany = (company) => {
+    setSelectedCompany(company);
+    setSearchTerm(company.name);
+    setSearchResults([]);
   };
 
   const fetchContractorData = async (employeeId: number) => {
@@ -506,6 +525,263 @@ export function ContractorAdminPanel() {
     });
     navigate('/');
   };
+
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    if (!newEmployee.first_name || !newEmployee.last_name || !newEmployee.login || !newEmployee.password) {
+      toast({
+        title: 'Błąd walidacji',
+        description: 'Wszystkie wymagane pola muszą być wypełnione!',
+        variant: 'destructive',
+      });
+      return;
+    }
+  
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .insert([{ ...newEmployee, contractor_id: contractorData.id }])
+        .select();
+  
+      if (error) throw error;
+  
+      setNewEmployee({
+        first_name: '',
+        last_name: '',
+        phone: '',
+        email: '',
+        login: '',
+        password: '',
+        role: 'worker',
+      });
+  
+      toast({
+        title: 'Sukces',
+        description: 'Pracownik został dodany pomyślnie',
+        variant: 'success',
+      });
+  
+      fetchEmployees(); // Odśwież listę pracowników
+    } catch (error) {
+      console.error('Błąd podczas dodawania pracownika:', error);
+      toast({
+        title: 'Błąd',
+        description: 'Nie udało się dodać pracownika',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('contractor_id', contractorData.id);
+  
+      if (error) throw error;
+      setEmployees(data || []);
+    } catch (error) {
+      console.error('Błąd podczas pobierania pracowników:', error);
+      toast({
+        title: 'Błąd',
+        description: 'Nie udało się pobrać listy pracowników',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSelectCompanyFromList = (company) => {
+    setSelectedCompany(company);
+    setShowCompanyDialog(false);
+  };
+
+  const handleBadgeSelection = (group, label) => {
+    setSelectedBadges((prev) => ({
+      ...prev,
+      [group]: label,
+    }));
+  };
+
+  const badges = [
+    { label: 'Obecna', color: 'bg-red-500 text-white' },
+    { label: 'Nieobecna', color: 'bg-green-500 text-white' },
+    { label: 'Brak danych', color: 'bg-gray-300 text-black' },
+    { label: 'Zwykła', color: 'bg-yellow-500 text-black' },
+    { label: 'Ekshumacja', color: 'bg-purple-500 text-white' },
+    { label: 'Do 100kg', color: 'bg-blue-200 text-black' },
+    { label: '+100kg', color: 'bg-blue-500 text-white' },
+    { label: 'Max', color: 'bg-purple-700 text-white' },
+  ];
+
+  const badgeGroups = [
+    {
+      title: 'Rodzina',
+      badges: [
+        { label: 'Obecna', color: 'bg-red-500 text-white' },
+        { label: 'Nieobecna', color: 'bg-green-500 text-white' },
+        { label: 'Brak danych', color: 'bg-gray-300 text-black' },
+      ],
+    },
+    {
+      title: 'Rodzaj kremacji',
+      badges: [
+        { label: 'Normalna', color: 'bg-yellow-500 text-black' },
+        { label: 'Ekshumacja', color: 'bg-purple-500 text-white' },
+      ],
+    },
+    {
+      title: 'Waga',
+      badges: [
+        { label: 'Do 100kg', color: 'bg-blue-200 text-black' },
+        { label: '+100kg', color: 'bg-blue-500 text-white' },
+        { label: 'Max', color: 'bg-purple-700 text-white' },
+      ],
+    },
+  ];
+
+  // Dodano funkcję grupującą kremacje według dni tygodnia.
+  const groupCremationsByDay = (cremations) => {
+    const daysOfWeek = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
+    const grouped = {};
+  
+    cremations.forEach((cremation) => {
+      const date = new Date(cremation.cremation_date);
+      const dayName = daysOfWeek[date.getDay()];
+      const formattedDate = `${date.getDate()} ${date.toLocaleString('pl-PL', { month: 'long' })}`;
+  
+      if (!grouped[formattedDate]) {
+        grouped[formattedDate] = { day: dayName, date: formattedDate, cremations: [] };
+      }
+  
+      grouped[formattedDate].cremations.push(cremation);
+    });
+  
+    return Object.values(grouped);
+  };
+  
+  // Pobranie i grupowanie kremacji.
+  useEffect(() => {
+    const fetchCremations = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cremations')
+          .select(`
+            id,
+            cremation_date,
+            cremation_time,
+            family_visit,
+            cremation_type,
+            weight,
+            unique_number,
+            company_id,
+            companies (name, short_name, city)
+          `)
+          .eq('contractor_id', contractorData.id)
+          .order('cremation_date', { ascending: true });
+    
+        if (error) throw error;
+    
+        const formattedCremations = data.map(cremation => ({
+          ...cremation,
+          company_name: cremation.companies?.name || 'Brak firmy',
+          short_name: cremation.companies?.short_name || '',
+          city: cremation.companies?.city || '',
+        }));
+    
+        setGroupedCremations(groupCremationsByDay(formattedCremations));
+      } catch (error) {
+        console.error('Błąd podczas pobierania kremacji:', error);
+        toast({
+          title: 'Błąd',
+          description: 'Nie udało się pobrać listy kremacji',
+          variant: 'destructive',
+        });
+      }
+    };
+  
+    if (contractorData?.id) {
+      fetchCremations();
+    }
+  }, [contractorData]);
+
+  // Naprawiono funkcję handleAddCremation, aby poprawnie obsługiwała strukturę selectedBadges jako obiekt.
+  const handleAddCremation = async (e) => {
+    e.preventDefault();
+    if (!selectedCompany || !cremationDate || !cremationTime) {
+      toast({
+        title: 'Błąd walidacji',
+        description: 'Wszystkie wymagane pola muszą być wypełnione!',
+        variant: 'destructive',
+      });
+      return;
+    }
+  
+    try {
+      const uniqueNumber = `KREM-${Date.now()}`;
+      const { data, error } = await supabase
+        .from('cremations')
+        .insert([{
+          contractor_id: contractorData.id,
+          company_id: selectedCompany.id,
+          cremation_date: cremationDate,
+          cremation_time: cremationTime,
+          family_visit: selectedBadges['Rodzina'] === 'Obecna' ? 'present' : selectedBadges['Rodzina'] === 'Nieobecna' ? 'not_present' : 'no_data',
+          cremation_type: selectedBadges['Rodzaj kremacji'] === 'Normalna' ? 'normal' : selectedBadges['Rodzaj kremacji'] === 'Ekshumacja' ? 'exhumation' : null,
+          weight: selectedBadges['Waga'] === 'Do 100kg' ? 'up_to_100kg' : selectedBadges['Waga'] === '+100kg' ? 'plus_100kg' : selectedBadges['Waga'] === 'Max' ? 'max' : null,
+          unique_number: uniqueNumber,
+        }])
+        .select();
+  
+      if (error) throw error;
+  
+      setCremations((prev) => [...prev, data[0]]);
+      setCremationDate('');
+      setCremationTime('');
+      setSelectedCompany(null);
+      setSearchTerm('');
+      setSelectedBadges({});
+  
+      toast({
+        title: 'Sukces',
+        description: 'Kremacja została dodana pomyślnie',
+        variant: 'success',
+      });
+    } catch (error) {
+      console.error('Błąd podczas dodawania kremacji:', error);
+      toast({
+        title: 'Błąd',
+        description: 'Nie udało się dodać kremacji',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  useEffect(() => {
+    const initializeDefaultOven = async () => {
+      if (contractorData?.id && ovens.length === 0) {
+        try {
+          const { data, error } = await supabase
+            .from('ovens')
+            .insert([{ name: 'Piec nr 1', color: 'gray', contractor_id: contractorData.id }])
+            .select();
+
+          if (error) throw error;
+
+          setOvens([...ovens, data[0]]);
+        } catch (error) {
+          console.error('Błąd podczas inicjalizacji domyślnego pieca:', error);
+          toast({
+            title: 'Błąd',
+            description: 'Nie udało się dodać domyślnego pieca',
+            variant: 'destructive',
+          });
+        }
+      }
+    };
+
+    initializeDefaultOven();
+  }, [contractorData, ovens]);
 
   if (loading) {
     return (
@@ -776,13 +1052,16 @@ export function ContractorAdminPanel() {
               <CardContent className="space-y-6">
                 <div className="border rounded-lg p-4 bg-card">
                   <h3 className="text-lg font-medium mb-4">Dodaj nową kremację</h3>
-                  <form className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form className="space-y-4" onSubmit={handleAddCremation}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <label htmlFor="cremation_date" className="text-sm font-medium">Data kremacji *</label>
                         <Input
                           id="cremation_date"
                           type="date"
+                          className="w-full"
+                          value={cremationDate}
+                          onChange={(e) => setCremationDate(e.target.value)}
                           required
                         />
                       </div>
@@ -791,100 +1070,177 @@ export function ContractorAdminPanel() {
                         <Input
                           id="cremation_time"
                           type="time"
+                          className="w-full"
+                          value={cremationTime}
+                          onChange={(e) => setCremationTime(e.target.value)}
                           required
                         />
                       </div>
                       <div className="space-y-2">
                         <label htmlFor="company_search" className="text-sm font-medium">Wyszukaj firmę</label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="company_search"
-                            placeholder="Wpisz nazwę firmy, NIP, miasto..."
-                            className="flex-1"
-                          />
-                          <Button type="button" variant="outline">
-                            Wybierz z listy
-                          </Button>
+                        <Input
+                          id="company_search"
+                          placeholder="Wpisz nazwę firmy, NIP, miasto..."
+                          value={searchTerm}
+                          onChange={handleCompanySearch}
+                          className="w-full"
+                        />
+                        <div className="absolute bg-white border rounded shadow-md mt-1 w-full max-h-40 overflow-y-auto">
+                          {searchResults.map(company => (
+                            <div
+                              key={company.id}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleSelectCompany(company)}
+                            >
+                              <p className="font-bold">{company.name}</p>
+                              <p className="text-sm text-gray-500">{company.city}</p>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <h4 className="font-medium">Oznaczenia kremacji</h4>
-                      <div className="flex flex-wrap gap-3">
-                        <div className="space-y-1">
-                          <label className="text-xs font-medium">Wizyta rodziny</label>
-                          <div className="flex gap-2">
-                            <Button type="button" variant="outline" size="sm">Obecna</Button>
-                            <Button type="button" variant="outline" size="sm">Nieobecna</Button>
-                            <Button type="button" variant="outline" size="sm">Brak danych</Button>
-                          </div>
+                    <div className="space-y-2">
+                      {searchResults.map(company => (
+                        <div
+                          key={company.id}
+                          className="p-2 border rounded cursor-pointer hover:bg-muted"
+                          onClick={() => handleSelectCompany(company)}
+                        >
+                          {company.name} ({company.city})
                         </div>
-                        
-                        <div className="space-y-1">
-                          <label className="text-xs font-medium">Rodzaj kremacji</label>
-                          <div className="flex gap-2">
-                            <Button type="button" variant="outline" size="sm">Zwykła</Button>
-                            <Button type="button" variant="outline" size="sm">Ekshumacja</Button>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <label className="text-xs font-medium">Waga</label>
-                          <div className="flex gap-2">
-                            <Button type="button" variant="outline" size="sm">do 100kg</Button>
-                            <Button type="button" variant="outline" size="sm">+100kg</Button>
-                            <Button type="button" variant="outline" size="sm">max</Button>
-                          </div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                    
-                    <Button type="submit">Dodaj kremację</Button>
+                    <div className="flex flex-wrap gap-4">
+                      {badgeGroups.map(group => (
+                        <div key={group.title} className="flex-1 border rounded-lg p-4">
+                          <h4 className="font-medium mb-2 text-center">{group.title}</h4>
+                          <div className="flex justify-center gap-2">
+                            {group.badges.map(badge => (
+                              <div
+                                key={badge.label}
+                                className={`px-2 py-1 text-sm rounded-full cursor-pointer ${selectedBadges[group.title] === badge.label ? badge.color : 'opacity-60'}`}
+                                onClick={() => handleBadgeSelection(group.title, badge.label)}
+                              >
+                                {badge.label}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-4">
+                      {multiOvenEnabled && (
+                        <div className="flex flex-wrap gap-2">
+                          {ovens.map((oven) => (
+                            <button
+                              key={oven.id}
+                              className={`px-4 py-2 rounded-md text-sm font-medium ${selectedOven?.id === oven.id ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                              style={{ backgroundColor: oven.color === 'custom' ? oven.custom_color : ovenColors.find(c => c.value === oven.color)?.bgColor }}
+                              onClick={() => setSelectedOven(oven)}
+                            >
+                              {oven.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <Button type="submit" className="w-full">Dodaj kremację</Button>
                   </form>
                 </div>
                 
-                <div className="space-y-6">
-                  <h3 className="text-xl font-bold">Poniedziałek, 1 maja 2025</h3>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="text-xl font-bold w-20 text-right pt-2">09:00</div>
-                    <div className="flex-1">
-                      <div className="border rounded-lg p-4 bg-card">
-                        <div className="flex justify-between">
-                          <div>
-                            <h4 className="font-medium">Zakład Pogrzebowy XYZ</h4>
-                            <p className="text-sm text-muted-foreground">Warszawa</p>
+                <Tabs defaultValue="list">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="list">Lista</TabsTrigger>
+                    <TabsTrigger value="calendar">Kalendarz</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="list">
+                    <Tabs defaultValue="all">
+                      <TabsList className="mb-4">
+                        <TabsTrigger value="all">Wszystkie</TabsTrigger>
+                        {ovens.map((oven) => (
+                          <TabsTrigger key={oven.id} value={oven.id.toString()}>{oven.name}</TabsTrigger>
+                        ))}
+                      </TabsList>
+
+                      <TabsContent value="all">
+                        {groupedCremations.map(({ day, date, cremations }) => (
+                          <div key={date} className="mb-6">
+                            <h3 className="text-lg font-bold mb-2">{day}, {date}</h3>
+                            {cremations.map(cremation => (
+                              <div key={cremation.id} className={`flex items-start gap-4 p-4 border rounded-lg`} style={{ borderColor: ovens.find(o => o.id === cremation.oven_id)?.color || 'gray' }}>
+                                <div className="text-xl font-bold w-20 text-right pt-2">{cremation.time}</div>
+                                <div className="flex-1">
+                                  <div className="border rounded-lg p-4 bg-card">
+                                    <div className="flex justify-between">
+                                      <div>
+                                        <h4 className="font-medium">{cremation.company_name}</h4>
+                                        <p className="text-sm text-muted-foreground">{cremation.short_name}, {cremation.city}</p>
+                                      </div>
+                                      <div className="flex gap-1">
+                                        {cremation.badges.map(badge => (
+                                          <span key={badge} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {badge}
+                                          </span>
+                                        ))}
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${cremation.hasData ? 'bg-black text-white' : 'bg-gray-300 text-black'}`}>
+                                          <i className="icon-pencil"></i>
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <div className="flex gap-1">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                              Zwykła
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="text-xl font-bold w-20 text-right pt-2">12:30</div>
-                    <div className="flex-1">
-                      <div className="border rounded-lg p-4 bg-card border-l-4 border-l-red-500">
-                        <div className="flex justify-between">
-                          <div>
-                            <h4 className="font-medium">Usługi Pogrzebowe ABC</h4>
-                            <p className="text-sm text-muted-foreground">Kraków</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                              Rodzina obecna
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                        ))}
+                      </TabsContent>
+
+                      {ovens.map((oven) => (
+                        <TabsContent key={oven.id} value={oven.id.toString()}>
+                          {groupedCremations
+                            .filter(({ cremations }) => cremations.some(c => c.oven_id === oven.id))
+                            .map(({ day, date, cremations }) => (
+                              <div key={date} className="mb-6">
+                                <h3 className="text-lg font-bold mb-2">{day}, {date}</h3>
+                                {cremations
+                                  .filter(c => c.oven_id === oven.id)
+                                  .map(cremation => (
+                                    <div key={cremation.id} className={`flex items-start gap-4 p-4 border rounded-lg`} style={{ borderColor: oven.color === 'custom' ? oven.custom_color : ovenColors.find(c => c.value === oven.color)?.bgColor }}>
+                                      <div className="text-xl font-bold w-20 text-right pt-2">{cremation.time}</div>
+                                      <div className="flex-1">
+                                        <div className="border rounded-lg p-4 bg-card">
+                                          <div className="flex justify-between">
+                                            <div>
+                                              <h4 className="font-medium">{cremation.company_name}</h4>
+                                              <p className="text-sm text-muted-foreground">{cremation.short_name}, {cremation.city}</p>
+                                            </div>
+                                            <div className="flex gap-1">
+                                              {cremation.badges.map(badge => (
+                                                <span key={badge} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                  {badge}
+                                                </span>
+                                              ))}
+                                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${cremation.hasData ? 'bg-black text-white' : 'bg-gray-300 text-black'}`}>
+                                                <i className="icon-pencil"></i>
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            ))}
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </TabsContent>
+
+                  <TabsContent value="calendar">
+                    <p>Widok kalendarza w trakcie implementacji...</p>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </TabsContent>
@@ -914,59 +1270,48 @@ export function ContractorAdminPanel() {
                   
                   <TabsContent value="ovens">
                     <div className="space-y-6">
-                      <div className="flex items-center space-x-2">
-                        <Switch 
-                          id="multi-oven" 
-                          checked={multiOvenEnabled}
-                          onCheckedChange={setMultiOvenEnabled}
-                        />
-                        <Label htmlFor="multi-oven">Więcej niż jeden piec</Label>
-                      </div>
-                      
-                      {multiOvenEnabled && (
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">Dodaj nowy piec</h3>
-                          <form onSubmit={handleAddOven} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <label htmlFor="oven_name" className="text-sm font-medium">Nazwa pieca *</label>
-                                <Input
-                                  id="oven_name"
-                                  value={newOven.name}
-                                  onChange={(e) => setNewOven({...newOven, name: e.target.value})}
-                                  placeholder="Nazwa pieca"
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium block mb-2">Kolor</label>
-                                <div className="grid grid-cols-6 gap-2">
-                                  {ovenColors.map((color) => (
-                                    <div 
-                                      key={color.value}
-                                      className={`w-10 h-10 rounded-md cursor-pointer transition-all ${newOven.color === color.value ? 'ring-4 ring-primary' : 'ring-1 ring-border hover:ring-2'}`}
-                                      style={{ backgroundColor: color.bgColor }}
-                                      onClick={() => setNewOven({...newOven, color: color.value})}
-                                      title={color.label}
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">Dodaj nowy piec</h3>
+                        <form onSubmit={handleAddOven} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label htmlFor="oven_name" className="text-sm font-medium">Nazwa pieca *</label>
+                              <Input
+                                id="oven_name"
+                                value={newOven.name}
+                                onChange={(e) => setNewOven({...newOven, name: e.target.value})}
+                                placeholder="Nazwa pieca"
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium block mb-2">Kolor</label>
+                              <div className="grid grid-cols-6 gap-2">
+                                {ovenColors.map((color) => (
+                                  <div 
+                                    key={color.value}
+                                    className={`w-10 h-10 rounded-md cursor-pointer transition-all ${newOven.color === color.value ? 'ring-4 ring-primary' : 'ring-1 ring-border hover:ring-2'}`}
+                                    style={{ backgroundColor: color.bgColor }}
+                                    onClick={() => setNewOven({...newOven, color: color.value})}
+                                    title={color.label}
+                                  />
+                                ))}
+                                {newOven.color === 'custom' && (
+                                  <div className="col-span-6 mt-2">
+                                    <Input
+                                      type="color"
+                                      value={newOven.custom_color || '#ffffff'}
+                                      onChange={(e) => setNewOven({...newOven, custom_color: e.target.value})}
+                                      className="h-10 w-full"
                                     />
-                                  ))}
-                                  {newOven.color === 'custom' && (
-                                    <div className="col-span-6 mt-2">
-                                      <Input
-                                        type="color"
-                                        value={newOven.custom_color || '#ffffff'}
-                                        onChange={(e) => setNewOven({...newOven, custom_color: e.target.value})}
-                                        className="h-10 w-full"
-                                      />
-                                    </div>
-                                  )}
-                                </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <Button type="submit">Dodaj piec</Button>
-                          </form>
-                        </div>
-                      )}
+                          </div>
+                          <Button type="submit">Dodaj piec</Button>
+                        </form>
+                      </div>
                       
                       <div>
                         <h3 className="text-lg font-medium mb-4">Lista pieców</h3>
@@ -1112,6 +1457,31 @@ export function ContractorAdminPanel() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <Dialog open={showCompanyDialog} onOpenChange={setShowCompanyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Wybierz firmę</DialogTitle>
+          </DialogHeader>
+          <Input
+            placeholder="Wyszukaj firmę..."
+            value={searchTerm}
+            onChange={handleCompanySearch}
+            className="mb-4"
+          />
+          <div className="space-y-2">
+            {searchResults.map(company => (
+              <div
+                key={company.id}
+                className="p-2 border rounded cursor-pointer hover:bg-muted"
+                onClick={() => handleSelectCompanyFromList(company)}
+              >
+                {company.name} ({company.city})
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
